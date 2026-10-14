@@ -1,0 +1,148 @@
+
+import os
+import tempfile
+import time
+
+import streamlit as st
+import soundfile as sf
+import pandas as pd
+from jiwer import wer
+from faster_whisper import WhisperModel
+
+st.set_page_config(
+    page_title="Open-Source Speech Recognition",
+    page_icon="🎙️",
+    layout="wide"
+)
+
+st.title("🎙️ Open-Source Speech Recognition")
+st.caption(
+    "Local AI transcription and performance benchmarking"
+)
+
+@st.cache_resource
+def load_model(model_name):
+    return WhisperModel(
+        model_name,
+        device="cpu",
+        compute_type="int8",
+        cpu_threads=4
+    )
+
+st.sidebar.header("Settings")
+
+model_name = st.sidebar.selectbox(
+    "Choose speech recognition model",
+    ["small", "large-v3-turbo"]
+)
+
+uploaded_file = st.file_uploader(
+    "Upload audio",
+    type=["wav", "mp3", "m4a", "flac", "ogg"]
+)
+
+reference = st.text_area(
+    "Reference transcript (optional)",
+    placeholder="Paste the verified correct transcript here to calculate WER.",
+    height=120
+)
+
+if uploaded_file is not None:
+    st.audio(uploaded_file)
+
+    if st.button("Transcribe Audio", type="primary"):
+        temp_path = None
+
+        try:
+            suffix = os.path.splitext(uploaded_file.name)[1] or ".wav"
+
+            with tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=suffix
+            ) as temp_file:
+                temp_file.write(uploaded_file.getvalue())
+                temp_path = temp_file.name
+
+            with st.spinner(f"Running {model_name}..."):
+                model = load_model(model_name)
+
+                start = time.perf_counter()
+
+                segments, info = model.transcribe(
+                    temp_path,
+                    beam_size=1,
+                    vad_filter=True
+                )
+
+                transcript = " ".join(
+                    segment.text.strip()
+                    for segment in segments
+                )
+
+                elapsed = time.perf_counter() - start
+
+            audio_duration = sf.info(temp_path).duration
+            rtf = elapsed / audio_duration if audio_duration else 0
+
+            st.success("Transcription completed!")
+
+            st.subheader("Recognized text")
+            st.text_area(
+                "Transcript",
+                value=transcript,
+                height=220
+            )
+
+            col1, col2, col3, col4 = st.columns(4)
+            col1.metric("Model", model_name)
+            col2.metric("Processing time", f"{elapsed:.2f} sec")
+            col3.metric("Audio duration", f"{audio_duration:.2f} sec")
+            col4.metric("RTF", f"{rtf:.2f}")
+
+            if reference.strip():
+                error_rate = wer(reference, transcript)
+                st.metric("Word Error Rate", f"{error_rate:.2%}")
+                st.metric(
+                    "Derived 1 - WER score",
+                    f"{(1 - error_rate):.2%}"
+                )
+
+            st.download_button(
+                "Download transcript",
+                data=transcript,
+                file_name=f"{model_name}_transcript.txt",
+                mime="text/plain"
+            )
+
+            st.subheader("Benchmark results")
+
+            results = {
+                "Model": ["small", "large-v3-turbo"],
+                "Processing time (sec)": [31.69, 96.09],
+                "Audio duration (sec)": [60.01, 60.01],
+                "WER (%)": [8.67, 2.67]
+            }
+
+            df = pd.DataFrame(results)
+            st.dataframe(df, hide_index=True, use_container_width=True)
+
+            st.bar_chart(
+                df.set_index("Model")[["Processing time (sec)"]]
+            )
+
+            st.bar_chart(
+                df.set_index("Model")[["WER (%)"]]
+            )
+
+            st.caption(
+                "Historical values are your preliminary measurements. "
+                "Repeat tests on identical audio and use the same verified "
+                "reference transcript before drawing conclusions."
+            )
+
+        except Exception as error:
+            st.error(f"Transcription failed: {error}")
+
+        finally:
+            if temp_path and os.path.exists(temp_path):
+                os.remove(temp_path)
