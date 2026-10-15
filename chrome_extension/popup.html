@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speech Recognition</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <main class="app">
+    <header class="header">
+      <div class="brand-icon">S</div>
+      <div>
+        <h1>Speech<span>Text</span></h1>
+        <p>Open-source speech recognition</p>
+      </div>
+      <div class="status-dot" id="statusDot" title="API status"></div>
+    </header>
+
+    <div class="engine">
+      <span class="engine-indicator"></span>
+      <span>LOCAL AI ENGINE</span>
+      <span class="engine-model">Faster-Whisper</span>
+    </div>
+
+    <section class="upload-section">
+      <h2>Transcribe audio</h2>
+      <p class="section-description">
+        Convert audio into text privately on your computer.
+      </p>
+
+      <label class="drop-zone" id="dropZone" for="audioFile">
+        <div class="upload-icon">↑</div>
+        <strong id="uploadTitle">Choose an audio file</strong>
+        <span id="uploadSubtitle">Click here to browse your files</span>
+        <span class="file-formats">WAV · MP3 · M4A · FLAC · OGG</span>
+      </label>
+
+      <input
+        id="audioFile"
+        type="file"
+        accept=".wav,.mp3,.m4a,.flac,.ogg,audio/wav,audio/mpeg,audio/mp4,audio/flac,audio/ogg"
+      >
+
+      <div class="selected-file" id="selectedFile" hidden>
+        <div class="file-icon">♪</div>
+        <div class="file-details">
+          <strong id="fileName"></strong>
+          <span id="fileSize"></span>
+        </div>
+        <button id="removeFile" class="icon-button" title="Remove file">×</button>
+      </div>
+
+      <button id="transcribeBtn" class="primary-button" disabled>
+        <span>✦</span> Transcribe audio
+      </button>
+
+      <div class="progress-area" id="progressArea" hidden>
+        <div class="progress-heading">
+          <span id="progressMessage">Processing audio...</span>
+          <span class="spinner"></span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar"></div>
+        </div>
+        <p>Long recordings may take a few minutes.</p>
+      </div>
+
+      <div id="statusMessage" class="status-message" role="status">
+        Checking local transcription service...
+      </div>
+    </section>
+
+    <section class="tab-capture">
+      <div class="tab-heading">
+        <h2>Browser tab audio</h2>
+        <span class="tab-badge">NEW</span>
+      </div>
+
+      <p class="section-description">
+        Capture audio playing in the active Chrome tab and transcribe it locally.
+      </p>
+
+      <button id="startTabBtn" class="secondary-button">
+        Start tab recording
+      </button>
+
+      <button id="stopTabBtn" class="secondary-button" disabled>
+        Stop and transcribe
+      </button>
+
+      <p id="tabStatus" class="status-message" role="status">
+        Open a tab with audio to begin.
+      </p>
+    </section>
+
+    <section id="resultSection" class="result-section" hidden>
+      <div class="result-heading">
+        <div>
+          <h2>Your transcript</h2>
+          <p id="resultMeta">Ready to use</p>
+        </div>
+        <span class="success-label">COMPLETE</span>
+      </div>
+
+      <textarea id="transcript" readonly
+        placeholder="Your recognized speech will appear here."></textarea>
+
+      <div class="result-actions">
+        <button id="copyBtn" class="secondary-button">Copy text</button>
+        <button id="downloadBtn" class="secondary-button">↓ Download TXT</button>
+      </div>
+    </section>
+
+    <footer>
+      <span>◈ Processed locally</span>
+      <span>Powered by Faster-Whisper</span>
+    </footer>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
