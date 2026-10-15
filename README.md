@@ -111,6 +111,7 @@ Open the local URL displayed in your terminal, typically `http://localhost:8501`
 8. Download the transcript or export benchmark results to CSV.
 
 For a meaningful WER comparison, use the same verified reference transcript for every model tested on the same audio.
+<img width="1536" height="1024" alt="SpeechText Extension Tutorial Collage" src="https://github.com/user-attachments/assets/6d593707-c90d-48b8-b5da-e42f51c8fcde" />
 
 ## Evaluation Metrics
 
